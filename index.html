@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Sewa & Invoice Generator - Romu Rent Car</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tab-container {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #495057;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[readonly] { background-color: #f8fafc; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-invoice {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-secondary {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #059669;
+        }
+
+        .btn-add {
+            background: var(--secondary);
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            width: auto;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-apply {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            width: auto;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-apply:hover { background: var(--primary-dark); }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideIn 0.4s;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .result h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: #667eea;
+            padding-top: 15px;
+            margin-top: 5px;
+            border-top: 2px solid rgba(0,0,0,0.2);
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #1565c0;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .small-text {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        #invoice-section { display: none; }
+        #invoice-section.show { display: block; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .items-section {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin-bottom: 15px;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 3fr 1.5fr 1fr 1.5fr auto;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: end;
+        }
+
+        .coupon-input-group {
+            display: flex;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .coupon-input-group input {
+            flex: 1;
+        }
+
+        .coupon-message {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .coupon-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+            display: block;
+        }
+
+        .coupon-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+            display: block;
+        }
+
+        /* Invoice Output – DESAIN BARU DENGAN LOGO */
+        #invoice-output {
+            display: none;
+            background: #ffffff;
+            padding: 32px 40px;
+            margin-top: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            color: #000;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .inv-header-new {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .inv-logo-box img {
+            height: 70px;
+            width: auto;
+            display: block;
+        }
+
+        .inv-company-info {
+            text-align: right;
+            font-size: 14px;
+            color: #111827;
+        }
+
+        .inv-company-info h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .inv-company-info span {
+            display: block;
+            margin-top: 3px;
+        }
+
+        .inv-title {
+            text-align: center;
+            margin: 8px 0 20px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+
+        .inv-meta-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            font-size: 13px;
+            gap: 16px;
+        }
+
+        .inv-meta-block { flex: 1; }
+
+        .inv-meta-block h3 {
+            margin: 0 0 6px;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .inv-meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .inv-meta-table td:first-child {
+            width: 80px;
+            color: #6b7280;
+        }
+
+        .inv-meta-table td { padding: 2px 0; }
+
+        .inv-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+            font-size: 13px;
+        }
+
+        .inv-items-table thead { background: #f3f4f6; }
+
+        .inv-items-table th,
+        .inv-items-table td {
+            padding: 7px 8px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        .inv-items-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .inv-items-table td.qty,
+        .inv-items-table td.unit,
+        .inv-items-table td.total {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .inv-total-row {
+            font-weight: 700;
+            background: #f9fafb;
+        }
+
+        .inv-footer-note {
+            margin-top: 18px;
+            font-size: 11px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .inv-bank-info {
+            margin-top: 10px;
+            font-size: 11px;
+        }
+
+        .inv-signature-row {
+            margin-top: 22px;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 12px;
+        }
+
+        .inv-signature-block { text-align: center; }
+
+        .inv-signature-block .name {
+            margin-top: 36px;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .inv-small-text {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .pdf-action-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .card:not(#invoice-output) { display: none !important; }
+            .pdf-action-container { display: none !important; }
+            #invoice-output {
+                display: block !important;
+                border: none;
+                box-shadow: none;
+                page-break-after: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .item-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                background: white;
+                padding: 10px;
+                border: 1px solid #eee;
+            }
+            .coupon-input-group { flex-direction: column; }
+            .btn-apply { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- KALKULATOR SECTION -->
+        <div class="card">
+            <div class="header">
+                <h1>🚗 Kalkulator Sewa Kendaraan</h1>
+                <p>Mobil + Sopir Profesional - Romu Rent Car</p>
+            </div>
+
+            <div class="tab-container">
+                <button class="tab active" onclick="showTab('dalam-kota')">Dalam Kota</button>
+                <button class="tab" onclick="showTab('luar-kota')">Luar Kota (Jarak)</button>
+                <button class="tab" onclick="showTab('luar-kota-jam')">Luar Kota (Jam)</button>
+            </div>
+
+            <div class="content">
+                <!-- Dalam Kota Tab -->
+                <div id="dalam-kota" class="tab-content active">
+                    <div class="info-box">
+                        📍 Layanan dalam kota dengan sopir profesional
+                    </div>
+                    <div class="form-group">
+                        <label>Durasi Sewa</label>
+                        <select id="durasi-dalam-kota">
+                            <option value="">Pilih durasi...</option>
+                            <option value="3">3 Jam - Rp 175.000</option>
+                            <option value="6">6 Jam - Rp 250.000</option>
+                            <option value="9">9 Jam - Rp 325.000</option>
+                            <option value="12">12 Jam - Rp 400.000</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="hitungDalamKota()">Hitung Biaya</button>
+                    <div id="result-dalam-kota" class="result"></div>
+                </div>
+
+                <!-- Luar Kota (Jarak) Tab -->
+                <div id="luar-kota" class="tab-content">
+                    <div class="info-box">
+                        🛣️ Perhitungan berdasarkan jarak tempuh
+                    </div>
+                    <div class="form-group">
+                        <label>Harga Bensin per Liter (Rp)</label>
+                        <input type="number" id="harga-bensin" value="10000" placeholder="Masukkan harga bensin per liter" min="0">
+                        <div class="small-text">Default: Rp 10.000/liter</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipe Perjalanan</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="antar-saja" name="tipe-jarak" value="antar" checked>
+                                <label for="antar-saja">Antar Saja</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="pulang-pergi" name="tipe-jarak" value="pp">
+                                <label for="pulang-pergi">Pergi-Pulang</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Jarak Tempuh (km)</label>
+                        <input type="number" id="jarak-luar-kota" placeholder="Masukkan jarak dalam km" min="0" step="0.1">
+                    </div>
+                    <button class="btn" onclick="hitungLuarKota()">Hitung Biaya</button>
+                    <div id="result-luar-kota" class="result"></div>
+                </div>
+
+                <!-- Luar Kota (Per Jam) Tab -->
+                <div id="luar-kota-jam" class="tab-content">
+                    <div class="info-box">
+                        ⏰ Untuk: Magelang, Purworejo, Wonosari, Klaten, YIA Kulon Progo
+                    </div>
+                    <div class="form-group">
+                        <label>Durasi Sewa</label>
+                        <select id="durasi-luar-kota">
+                            <option value="">Pilih durasi...</option>
+                            <option value="6">6 Jam - Rp 300.000</option>
+                            <option value="9">9 Jam - Rp 375.000</option>
+                            <option value="12">12 Jam - Rp 450.000</option>
+                            <option value="24">24 Jam - Rp 650.000</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="hitungLuarKotaJam()">Hitung Biaya</button>
+                    <div id="result-luar-kota-jam" class="result"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVOICE SECTION -->
+        <div class="card" id="invoice-section">
+            <div class="header">
+                <h1>📄 Buat Invoice</h1>
+                <p>Lengkapi informasi untuk membuat invoice</p>
+            </div>
+
+            <div class="content">
+                <form id="invoiceForm">
+                    <div class="form-grid">
+                        <div>
+                            <div class="form-group">
+                                <label>Nama Bisnis</label>
+                                <input type="text" id="businessName" value="Romu Rent Car">
+                            </div>
+                            <div class="form-group">
+                                <label>Ditagihkan Kepada</label>
+                                <input type="text" id="billTo" placeholder="Nama Pelanggan">
+                            </div>
+                            <div class="form-group">
+                                <label>No. HP Klien</label>
+                                <input type="text" id="clientPhone" placeholder="Contoh: 0812xxxxxxx">
+                            </div>
+                            <div class="form-group">
+                                <label>Alamat Klien (optional)</label>
+                                <input type="text" id="clientAddress" placeholder="Alamat pelanggan">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label>No. Invoice</label>
+                                <input type="text" id="invoiceNo" placeholder="Kosongkan untuk otomatis 05122025">
+                            </div>
+                            <div class="form-group">
+                                <label>Tanggal</label>
+                                <input type="text" id="invoiceDate" placeholder="Pilih tanggal">
+                            </div>
+                            <div class="form-group">
+                                <label>Jatuh Tempo</label>
+                                <input type="text" id="dueDate" placeholder="Pilih tanggal">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="items-section">
+                        <label style="margin-bottom: 10px; font-size: 0.9rem;">📋 Daftar Layanan</label>
+                        <div id="itemsContainer">
+                            <div class="item-row">
+                                <div class="form-group" style="margin:0">
+                                    <input type="text" class="description" placeholder="Deskripsi item...">
+                                </div>
+                                <div class="form-group" style="margin:0">
+                                    <input type="number" class="price" placeholder="Harga">
+                                </div>
+                                <div class="form-group" style="margin:0">
+                                    <input type="number" class="quantity" value="1">
+                                </div>
+                                <div class="form-group" style="margin:0">
+                                    <input type="text" class="subtotal" readonly>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn-delete" onclick="removeItem(this)">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-add" onclick="addItem()">+ Tambah Item</button>
+                    </div>
+
+                    <div class="form-grid">
+                        <div></div>
+                        <div>
+                            <div class="form-group">
+                                <label>🎟️ Kode Kupon Diskon</label>
+                                <div class="coupon-input-group">
+                                    <input type="text" id="couponCode" placeholder="Kode kupon...">
+                                    <button type="button" class="btn-apply" onclick="applyCoupon()">Terapkan</button>
+                                </div>
+                                <div id="couponMessage" class="coupon-message"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Total (Rp)</label>
+                                <input type="text" id="totalAmount" readonly style="background: #eff6ff; font-weight: bold; color: var(--primary);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="generateInvoice()">📄 Generate Invoice</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- INVOICE OUTPUT (DESAIN BARU DENGAN LOGO) -->
+        <div id="invoice-output">
+            <div class="inv-header-new">
+                <div class="inv-logo-box">
+                    <img src="logo-sewa.png" alt="Logo Romu Rent Car">
+                </div>
+                <div class="inv-company-info">
+                    <h1>ROMU RENT CAR</h1>
+                    <span>Mobil + Sopir Profesional</span>
+                    <span>Yogyakarta</span>
+                    <span>Telp/WA: 0882005664602</span>
+                </div>
+            </div>
+
+            <div class="inv-title">INVOICE</div>
+
+            <div class="inv-meta-row">
+                <div class="inv-meta-block">
+                    <h3>INVOICE INFO</h3>
+                    <table class="inv-meta-table">
+                        <tr>
+                            <td>Invoice</td>
+                            <td>:</td>
+                            <td id="out-inv-number">#000000</td>
+                        </tr>
+                        <tr>
+                            <td>Tanggal</td>
+                            <td>:</td>
+                            <td id="out-inv-date">--/--/----</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="inv-meta-block">
+                    <h3>BILLED TO</h3>
+                    <table class="inv-meta-table">
+                        <tr>
+                            <td>Nama</td>
+                            <td>:</td>
+                            <td id="out-client-name">Nama Klien</td>
+                        </tr>
+                        <tr>
+                            <td>Alamat</td>
+                            <td>:</td>
+                            <td id="out-client-address">-</td>
+                        </tr>
+                        <tr>
+                            <td>HP</td>
+                            <td>:</td>
+                            <td id="out-client-phone">-</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <table class="inv-items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Item Description</th>
+                        <th style="width: 15%;">Qty</th>
+                        <th style="width: 20%;">Unit Price</th>
+                        <th style="width: 20%;">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="out-items-body"></tbody>
+                <tfoot>
+                    <tr class="inv-total-row">
+                        <td colspan="3" style="text-align: right;">TOTAL</td>
+                        <td id="out-grand-total" class="total">Rp 0</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="inv-footer-note">
+                <strong>Catatan:</strong><br>
+                Pembayaran selambat-lambatnya 7 hari setelah invoice keluar.
+            </div>
+
+            <div class="inv-bank-info">
+                <strong>Pembayaran Bisa Melalui:</strong><br>
+                Mandiri: 137 00162 78 133 a.n Ulas Rokhmat Cahyadi<br>
+                BRI: 1009 01010 2538 507 a.n Ulas Rokhmat Cahyadi<br>
+                WA: 0882005664602
+            </div>
+
+            <div class="inv-signature-row">
+                <div class="inv-signature-block">
+                    <div id="out-sign-date">Yogyakarta, --/--/----</div>
+                    <div class="name">Ulas R.C.</div>
+                </div>
+            </div>
+
+            <div class="inv-small-text">
+                Terima kasih telah menggunakan layanan Romu Rent Car.
+            </div>
+        </div>
+
+        <div class="pdf-action-container" id="pdfActionContainer">
+            <button type="button" class="btn btn-secondary" onclick="downloadPDF()" id="pdfButton">📥 Download PDF</button>
+        </div>
+    </div>
+
+    <script>
+        let currentCalculation = null;
+        let appliedCoupon = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#invoiceDate", { dateFormat: "d M Y", defaultDate: "today" });
+            flatpickr("#dueDate", { dateFormat: "d M Y" });
+        });
+
+        const validCoupons = {
+            'tetangga': { discount: 25000, label: 'Tetangga' },
+            'saudara': { discount: 50000, label: 'Saudara' }
+        };
+
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            const results = document.querySelectorAll('.result');
+            results.forEach(result => result.classList.remove('show'));
+        }
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function buatInvoice() {
+            if (!currentCalculation) {
+                alert('Tidak ada data perhitungan!');
+                return;
+            }
+
+            const invoiceSection = document.getElementById('invoice-section');
+            invoiceSection.classList.add('show');
+
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = '';
+
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML = `
+                <div class="form-group" style="margin:0">
+                    <input type="text" class="description" value="${currentCalculation.deskripsi}">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <input type="number" class="price" value="${currentCalculation.total}">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <input type="number" class="quantity" value="1">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <input type="text" class="subtotal" readonly>
+                </div>
+                <div>
+                    <button type="button" class="btn-delete" onclick="this.closest('.item-row').remove(); updateGrandTotal();">✕</button>
+                </div>
+            `;
+            container.appendChild(row);
+
+            setTimeout(() => {
+                calculateRow(row);
+                invoiceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        function hitungDalamKota() {
+            const durasi = document.getElementById('durasi-dalam-kota').value;
+            const resultDiv = document.getElementById('result-dalam-kota');
+
+            if (!durasi) {
+                alert('Silakan pilih durasi sewa!');
+                return;
+            }
+
+            const prices = {
+                '3': 175000,
+                '6': 250000,
+                '9': 325000,
+                '12': 400000
+            };
+
+            const total = prices[durasi];
+            const feeSopir = 100000;
+            const biayaWaktu = total - feeSopir;
+
+            currentCalculation = {
+                tipe: 'Dalam Kota',
+                deskripsi: `Sewa Mobil + Sopir Dalam Kota (${durasi} Jam)`,
+                total: total
+            };
+
+            resultDiv.innerHTML = `
+                <h3>💰 Rincian Biaya</h3>
+                <div class="result-item">
+                    <span>Durasi:</span>
+                    <span>${durasi} Jam</span>
+                </div>
+                <div class="result-item">
+                    <span>Fee Sopir:</span>
+                    <span>${formatRupiah(feeSopir)}</span>
+                </div>
+                <div class="result-item">
+                    <span>Biaya Waktu:</span>
+                    <span>${formatRupiah(biayaWaktu)}</span>
+                </div>
+                <div class="result-item">
+                    <span>TOTAL BIAYA:</span>
+                    <span>${formatRupiah(total)}</span>
+                </div>
+                <button class="btn btn-invoice" onclick="buatInvoice()" style="margin-top: 15px;">
+                    📄 Buat Invoice
+                </button>
+            `;
+            resultDiv.classList.add('show');
+        }
+
+        function hitungLuarKota() {
+            const jarak = parseFloat(document.getElementById('jarak-luar-kota').value);
+            const hargaBensin = parseFloat(document.getElementById('harga-bensin').value);
+            const tipe = document.querySelector('input[name="tipe-jarak"]:checked').value;
+            const resultDiv = document.getElementById('result-luar-kota');
+
+            if (!jarak || jarak <= 0) {
+                alert('Silakan masukkan jarak yang valid!');
+                return;
+            }
+
+            if (!hargaBensin || hargaBensin <= 0) {
+                alert('Silakan masukkan harga bensin yang valid!');
+                return;
+            }
+
+            let jarakTotal, literBensin, beaDasarBensin, feePerjalanan, totalBiaya;
+            let keterangan = '';
+
+            if (tipe === 'antar') {
+                jarakTotal = jarak;
+                literBensin = jarakTotal / 11;
+                beaDasarBensin = Math.ceil(literBensin * hargaBensin);
+                feePerjalanan = 100000;
+                totalBiaya = beaDasarBensin + feePerjalanan;
+                keterangan = 'Antar Saja';
+            } else {
+                jarakTotal = jarak * 2;
+                literBensin = jarakTotal / 11;
+                beaDasarBensin = Math.ceil(literBensin * hargaBensin);
+
+                if (jarakTotal < 100) {
+                    feePerjalanan = 100000;
+                } else if (jarakTotal < 200) {
+                    feePerjalanan = 200000;
+                } else if (jarakTotal < 250) {
+                    feePerjalanan = 250000;
+                } else if (jarakTotal < 300) {
+                    feePerjalanan = 300000;
+                } else if (jarakTotal < 350) {
+                    feePerjalanan = 350000;
+                } else if (jarakTotal < 400) {
+                    feePerjalanan = 400000;
+                } else if (jarakTotal < 450) {
+                    feePerjalanan = 450000;
+                } else if (jarakTotal < 500) {
+                    feePerjalanan = 500000;
+                } else if (jarakTotal < 600) {
+                    feePerjalanan = 600000;
+                } else if (jarakTotal < 700) {
+                    feePerjalanan = 700000;
+                } else if (jarakTotal < 800) {
+                    feePerjalanan = 800000;
+                } else if (jarakTotal < 900) {
+                    feePerjalanan = 900000;
+                } else if (jarakTotal <= 1000) {
+                    feePerjalanan = 1000000;
+                } else {
+                    feePerjalanan = Math.ceil(jarakTotal / 100) * 100000;
+                }
+
+                totalBiaya = beaDasarBensin + feePerjalanan;
+                keterangan = 'Pergi-Pulang';
+            }
+
+            currentCalculation = {
+                tipe: 'Luar Kota (Jarak)',
+                deskripsi: `Sewa Mobil + Sopir Luar Kota - ${keterangan} (${jarak} km)`,
+                total: totalBiaya
+            };
+
+            resultDiv.innerHTML = `
+                <h3>💰 Rincian Biaya</h3>
+                <div class="result-item">
+                    <span>Tipe:</span>
+                    <span>${keterangan}</span>
+                </div>
+                <div class="result-item">
+                    <span>Jarak Input:</span>
+                    <span>${jarak} km</span>
+                </div>
+                <div class="result-item">
+                    <span>Total Jarak:</span>
+                    <span>${jarakTotal} km</span>
+                </div>
+                <div class="result-item">
+                    <span>Kebutuhan Bensin:</span>
+                    <span>${literBensin.toFixed(2)} liter</span>
+                </div>
+                <div class="result-item">
+                    <span>Bea Dasar Bensin:</span>
+                    <span>${formatRupiah(beaDasarBensin)}</span>
+                </div>
+                <div class="result-item">
+                    <span>Fee Perjalanan:</span>
+                    <span>${formatRupiah(feePerjalanan)}</span>
+                </div>
+                <div class="result-item">
+                    <span>TOTAL BIAYA:</span>
+                    <span>${formatRupiah(totalBiaya)}</span>
+                </div>
+                <button class="btn btn-invoice" onclick="buatInvoice()" style="margin-top: 15px;">
+                    📄 Buat Invoice
+                </button>
+            `;
+            resultDiv.classList.add('show');
+        }
+
+        function hitungLuarKotaJam() {
+            const durasi = document.getElementById('durasi-luar-kota').value;
+            const resultDiv = document.getElementById('result-luar-kota-jam');
+
+            if (!durasi) {
+                alert('Silakan pilih durasi sewa!');
+                return;
+            }
+
+            const prices = {
+                '6': 300000,
+                '9': 375000,
+                '12': 450000,
+                '24': 650000
+            };
+
+            const total = prices[durasi];
+            const cities = 'Magelang, Purworejo, Wonosari, Klaten, YIA Kulon Progo';
+
+            currentCalculation = {
+                tipe: 'Luar Kota (Per Jam)',
+                deskripsi: `Sewa Mobil + Sopir Luar Kota (${durasi} Jam)`,
+                total: total
+            };
+
+            resultDiv.innerHTML = `
+                <h3>💰 Rincian Biaya</h3>
+                <div class="result-item">
+                    <span>Durasi:</span>
+                    <span>${durasi} Jam</span>
+                </div>
+                <div class="result-item">
+                    <span>Area:</span>
+                    <span style="font-size: 12px;">${cities}</span>
+                </div>
+                <div class="result-item">
+                    <span>TOTAL BIAYA:</span>
+                    <span>${formatRupiah(total)}</span>
+                </div>
+                <button class="btn btn-invoice" onclick="buatInvoice()" style="margin-top: 15px;">
+                    📄 Buat Invoice
+                </button>
+            `;
+            resultDiv.classList.add('show');
+        }
+
+        function calculateRow(row) {
+            const price = parseFloat(row.querySelector('.price').value) || 0;
+            const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+            row.querySelector('.subtotal').value = formatRupiah(price * qty);
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+            let total = 0;
+            document.querySelectorAll('.item-row').forEach(row => {
+                const price = parseFloat(row.querySelector('.price').value) || 0;
+                const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+                total += (price * qty);
+            });
+
+            let discAmount = 0;
+
+            if (appliedCoupon) {
+                discAmount = appliedCoupon.discount;
+                if (discAmount > total) discAmount = total;
+            }
+
+            document.getElementById('totalAmount').value = formatRupiah(total - discAmount);
+            return { total, discAmount, finalTotal: total - discAmount };
+        }
+
+        function applyCoupon() {
+            const couponInput = document.getElementById('couponCode');
+            const couponCode = couponInput.value.trim().toLowerCase();
+            const messageDiv = document.getElementById('couponMessage');
+
+            if (!couponCode) {
+                messageDiv.className = 'coupon-message error';
+                messageDiv.textContent = '❌ Mohon masukkan kode kupon!';
+                appliedCoupon = null;
+                updateGrandTotal();
+                return;
+            }
+
+            if (validCoupons[couponCode]) {
+                appliedCoupon = validCoupons[couponCode];
+                messageDiv.className = 'coupon-message success';
+                messageDiv.textContent = `✅ Kupon "${appliedCoupon.label}" berhasil diterapkan! Diskon ${formatRupiah(appliedCoupon.discount)}`;
+                updateGrandTotal();
+            } else {
+                messageDiv.className = 'coupon-message error';
+                messageDiv.textContent = '❌ Kode kupon tidak valid!';
+                appliedCoupon = null;
+                updateGrandTotal();
+            }
+        }
+
+        document.getElementById('couponCode').addEventListener('input', function() {
+            const messageDiv = document.getElementById('couponMessage');
+            messageDiv.className = 'coupon-message';
+            messageDiv.style.display = 'none';
+        });
+
+        document.getElementById('itemsContainer').addEventListener('input', e => {
+            if (e.target.matches('.price, .quantity')) calculateRow(e.target.closest('.item-row'));
+        });
+
+        function addItem() {
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML = `
+                <div class="form-group" style="margin:0"><input type="text" class="description" placeholder="Item..."></div>
+                <div class="form-group" style="margin:0"><input type="number" class="price" placeholder="0"></div>
+                <div class="form-group" style="margin:0"><input type="number" class="quantity" value="1"></div>
+                <div class="form-group" style="margin:0"><input type="text" class="subtotal" readonly></div>
+                <div><button type="button" class="btn-delete" onclick="this.closest('.item-row').remove(); updateGrandTotal();">✕</button></div>
+            `;
+            document.getElementById('itemsContainer').appendChild(row);
+        }
+
+        function removeItem(btn) {
+            const row = btn.closest('.item-row');
+            if (document.querySelectorAll('.item-row').length > 1) {
+                row.remove();
+                updateGrandTotal();
+            } else {
+                alert("Minimal harus ada 1 item.");
+            }
+        }
+
+        // generateInvoice dengan nomor otomatis ddMMyyyy + total setelah diskon + HP klien
+        function generateInvoice() {
+            const billTo = document.getElementById('billTo').value || 'Nama Klien';
+            const clientAddress = document.getElementById('clientAddress').value || '-';
+            const clientPhone = document.getElementById('clientPhone').value || '-';
+            const invoiceNo = document.getElementById('invoiceNo').value.trim();
+            const invoiceDateInput = document.getElementById('invoiceDate').value;
+
+            const itemRows = document.querySelectorAll('#itemsContainer .item-row');
+            const outBody = document.getElementById('out-items-body');
+            outBody.innerHTML = '';
+
+            itemRows.forEach(row => {
+                const desc = row.querySelector('.description').value.trim();
+                const price = parseFloat(row.querySelector('.price').value) || 0;
+                const qty = parseFloat(row.querySelector('.quantity').value) || 0;
+                const sub = price * qty;
+                if (!desc && sub === 0) return;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${desc || '-'}</td>
+                    <td class="qty">${qty}</td>
+                    <td class="unit">${formatRupiah(price)}</td>
+                    <td class="total">${formatRupiah(sub)}</td>
+                `;
+                outBody.appendChild(tr);
+            });
+
+            // Hitung total dan diskon dari fungsi yang sudah ada
+            const totals = updateGrandTotal(); // { total, discAmount, finalTotal }
+
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const todayStr = `${dd}/${mm}/${yyyy}`;
+
+            // No invoice otomatis ddMMyyyy jika field kosong
+            const dateCode = `${dd}${mm}${yyyy}`;
+            const invNumber = invoiceNo || dateCode;
+
+            // Tanggal tampilan (boleh pakai input dari flatpickr)
+            let invDateStr = todayStr;
+            if (invoiceDateInput) {
+                invDateStr = invoiceDateInput;
+            }
+
+            document.getElementById('out-inv-number').textContent = invNumber;
+            document.getElementById('out-inv-date').textContent = invDateStr;
+            document.getElementById('out-client-name').textContent = billTo;
+            document.getElementById('out-client-address').textContent = clientAddress;
+            document.getElementById('out-client-phone').textContent = clientPhone;
+            document.getElementById('out-grand-total').textContent = formatRupiah(totals.finalTotal);
+            document.getElementById('out-sign-date').textContent = `Yogyakarta, ${todayStr}`;
+
+            document.getElementById('invoice-output').style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('invoice-output').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+
+            const pdfAction = document.querySelector('.pdf-action-container');
+            if (pdfAction) {
+                pdfAction.style.display = 'block';
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('invoice-output');
+            const btn = document.getElementById('pdfButton');
+
+            if (!element || element.style.display === 'none') {
+                alert('⚠️ Harap generate invoice terlebih dahulu!');
+                return;
+            }
+
+            const invNo = document.getElementById('out-inv-number').textContent.replace(/[^a-zA-Z0-9]/g, '_') || 'INV_' + Date.now();
+
+            btn.innerText = "⏳ Membuat PDF...";
+            btn.disabled = true;
+
+            const opt = {
+                margin: 10,
+                filename: `Invoice_${invNo}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    letterRendering: true
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            setTimeout(function() {
+                html2pdf()
+                    .from(element)
+                    .set(opt)
+                    .save()
+                    .then(function() {
+                        btn.innerText = "✅ Berhasil!";
+                        btn.disabled = false;
+                        setTimeout(function() {
+                            btn.innerText = "📥 Download PDF";
+                        }, 2000);
+                    })
+                    .catch(function() {
+                        alert("❌ Gagal membuat PDF! Gunakan Ctrl+P untuk print.");
+                        btn.innerText = "📥 Download PDF";
+                        btn.disabled = false;
+                    });
+            }, 300);
+        }
+    </script>
+</body>
+</html>
